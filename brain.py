@@ -213,7 +213,6 @@ class Brain:
 
         name = area.name
         prev_winner_inputs = [0.] * area.w
-        print('area.w', area.w)
         for stim in from_stimuli:
             stim_inputs = self.stimuli_connectomes[stim][name]
             # print('si shape', stim_inputs.shape)

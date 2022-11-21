@@ -76,11 +76,7 @@ def association_grand_sim(n=100000, k=317, p=0.01, beta=0.05, min_iter=10, max_i
                        b_copy2.areas["C"].winners)
         results[i] = float(o)/float(k)
         print()
-    print('check A --> B', b_copy1.connectomes['A']['B'].shape, np.count_nonzero(
-        b_copy1.connectomes['A']['B']), np.max(b_copy1.connectomes['A']['B']))
-    print('check B --> A', b_copy1.connectomes['B']['A'].shape, np.count_nonzero(
-        b_copy1.connectomes['B']['A']), np.max(b_copy1.connectomes['B']['A']))
-    return results, b
+    return results
 
 
 def memory_transfer(n=100000, k=317, p=0.01, beta=0.05, min_iter=10, max_iter=20):
@@ -88,6 +84,7 @@ def memory_transfer(n=100000, k=317, p=0.01, beta=0.05, min_iter=10, max_iter=20
     b.add_stimulus("stimA", k)
     b.add_area("A", n, k, beta)
     b.add_area("B", n, k, beta)
+    overlap = []
 
     ###############################################
     # project stimulus to area
@@ -98,26 +95,25 @@ def memory_transfer(n=100000, k=317, p=0.01, beta=0.05, min_iter=10, max_iter=20
 
     # Create assemblies A and B to stability
     for i in range(9):
+        print("A.w=" + str(b.areas["A"].w))
+        print("B.w=" + str(b.areas["B"].w))
         b.project({"stimA": ["A", "B"]},
                   {"A": ["A"], "B": ["B"]})
+        o = bu.overlap(b.areas["B"].winners, b.areas["A"].winners)
+        overlap.append(float(o)/float(k))
+        print('overlap', overlap)
 
     # Coprojection, A --> B, B --> A
-    results = {}
     print('co-projection')
-    b.project({"stimA": ["A", "B"]},
-              {"A": ["A", "B"], "B": ["B", "A"]})
-    overlap = float(bu.overlap(b.areas["A"].winners,
-                               b.areas["B"].winners))/float(k)
-    results[0] = overlap
-    print("overlap", overlap)
     for i in range(1, 9):
+        print("A.w=" + str(b.areas["A"].w))
+        print("B.w=" + str(b.areas["B"].w))
         b.project({"stimA": ["A", "B"]},
                   {"A": ["A", "B"], "B": ["B", "A"]})
-        o = bu.overlap(b.areas["A"].winners, b.areas["B"].winners)
-        overlap = float(o)/float(k)
-        results[i] = overlap
-        print("overlap", overlap)
-        print()
+        o = bu.overlap(b.areas["B"].winners, b.areas["A"].winners)
+        overlap.append(float(o)/float(k))
+        print('overlap', overlap)
+    print()
 
     # for i in range(min_iter, max_iter+1):
     #     b.project({"stimA": ["A", "B"]},
@@ -135,12 +131,13 @@ def memory_transfer(n=100000, k=317, p=0.01, beta=0.05, min_iter=10, max_iter=20
     #     b_copy2.project({"stimA": ["B"]}, {})
     #     b_copy2.project({}, {"B": ["A"]})
 
-    #     o = bu.overlap(b_copy1.areas["A"].winners, b_copy2.areas["B"].winners)
+    #     o = bu.overlap(b_copy1.areas["B"].winners, b_copy2.areas["A"].winners)
     #     overlap = float(o)/float(k)
 
     #     results[i] = overlap
+    #     print('overlap', overlap)
     #     print()
-    return results
+    return overlap
 
 
 def memory_transfer_2(n=100000, k=317, p=0.01, beta=0.05, min_iter=10, max_iter=20):
@@ -230,6 +227,6 @@ def fixed_assembly_recip_proj(n=100000, k=317, p=0.01, beta=0.05):
 
 if __name__ == '__main__':
     # np.set_printoptions(threshold=sys.maxsize)
-    b = memory_transfer_2()
+    b = memory_transfer()
     print(b)
     # b = fixed_assembly_recip_proj()
