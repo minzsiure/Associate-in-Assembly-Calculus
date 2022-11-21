@@ -213,10 +213,15 @@ class Brain:
 
         name = area.name
         prev_winner_inputs = [0.] * area.w
+        print('area.w', area.w)
         for stim in from_stimuli:
             stim_inputs = self.stimuli_connectomes[stim][name]
+            # print('si shape', stim_inputs.shape)
             for i in range(area.w):
+                if i == stim_inputs.shape[0]:  # TODO
+                    break  # TODO
                 prev_winner_inputs[i] += stim_inputs[i]
+
         for from_area in from_areas:
             connectome = self.connectomes[from_area][name]
             for w in self.areas[from_area].winners:
@@ -341,6 +346,9 @@ class Brain:
             if self.no_plasticity:
                 stim_to_area_beta = 0.0
             for i in area.new_winners:
+                # print(self.stimuli_connectomes[stim][name].shape, i)
+                if i >= self.stimuli_connectomes[stim][name].shape[0]:  # TODO
+                    break  # TODO
                 self.stimuli_connectomes[stim][name][i] *= (
                     1+stim_to_area_beta)
             if verbose:

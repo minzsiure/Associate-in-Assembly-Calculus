@@ -143,7 +143,93 @@ def memory_transfer(n=100000, k=317, p=0.01, beta=0.05, min_iter=10, max_iter=20
     return results
 
 
+def memory_transfer_2(n=100000, k=317, p=0.01, beta=0.05, min_iter=10, max_iter=20):
+    b = brain.Brain(p, save_winners=True)
+    b.add_stimulus("stimA", k)
+    b.add_area("A", n, k, beta)
+    b.add_area("B", n, k, beta)
+
+    ###############################################
+    # project stimulus to area
+    # NO projection from area to area
+    print('stimA --> A', 'stimA --> B')
+    # print('create assemblies A, B to stability')
+    b.project({"stimA": ["A", "B"]}, {})
+
+    # Create assemblies A to stability
+    b.areas["B"].fix_assembly()
+    for i in range(10):
+        b.project({"stimA": ["A", "B"]},
+                  {"A": ["A"]})
+        print("A.w=" + str(b.areas["A"].w))
+    b.areas["B"].unfix_assembly()
+
+    # Freeze assembly in A and start projecting A <-> B
+    b.areas["A"].fix_assembly()
+    b.project({}, {"A": ["B"]})
+    for i in range(10):
+        b.project({}, {"A": ["B"], "B": ["A", "B"]})
+        print("B.w=" + str(b.areas["B"].w))
+    b.areas["A"].unfix_assembly()
+
+    # Coprojection, A --> B, B --> A
+    results = {}
+    overlap = float(bu.overlap(b.areas["A"].winners,
+                               b.areas["B"].winners))/float(k)
+    results[0] = overlap
+    print("overlap", overlap)
+
+    print('co-projection')
+    b.project({"stimA": ["A", "B"]},
+              {"A": ["A", "B"], "B": ["B", "A"]})
+
+    for i in range(1, 9):
+        b.project({"stimA": ["A", "B"]},
+                  {"A": ["A", "B"], "B": ["B", "A"]})
+        o = bu.overlap(b.areas["A"].winners, b.areas["B"].winners)
+        overlap = float(o)/float(k)
+        results[i] = overlap
+        print("overlap", overlap)
+        print()
+    return results
+
+
+def fixed_assembly_recip_proj(n=100000, k=317, p=0.01, beta=0.05):
+    b = brain.Brain(p, save_winners=True)
+    b.add_stimulus("stimA", k)
+    b.add_area("A", n, k, beta)
+
+    # Will project fixes A into B
+    b.add_area("B", n, k, beta)
+    b.project({"stimA": ["A"]}, {})
+    print("A.w=" + str(b.areas["A"].w))
+    for i in range(20):
+        b.project({"stimA": ["A"]}, {"A": ["A"]})
+        print("A.w=" + str(b.areas["A"].w))
+
+    # Freeze assembly in A and start projecting A <-> B
+    b.areas["A"].fix_assembly()
+    b.project({}, {"A": ["B"]})
+    for i in range(20):
+        b.project({}, {"A": ["B"], "B": ["A", "B"]})
+        print("B.w=" + str(b.areas["B"].w))
+
+    # If B has stabilized, this implies that the A->B direction is stable.
+    # Therefore to test that this "worked" we should check that B->A restores A
+    print("Before B->A, A.w=" + str(b.areas["A"].w))
+    b.areas["A"].unfix_assembly()
+    b.project({}, {"B": ["A"]})
+    print("After B->A, A.w=" + str(b.areas["A"].w))
+    for i in range(20):
+        b.project({}, {"B": ["A"], "A": ["A"]})
+        print("A.w=" + str(b.areas["A"].w))
+    overlaps = bu.get_overlaps(
+        b.areas["A"].saved_winners[-22:], 0, percentage=True)
+    print(overlaps)
+
+
 if __name__ == '__main__':
     # np.set_printoptions(threshold=sys.maxsize)
-    b = memory_transfer()
+    b = memory_transfer_2()
     print(b)
+    # b = fixed_assembly_recip_proj()
