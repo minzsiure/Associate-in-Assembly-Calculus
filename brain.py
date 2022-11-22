@@ -6,6 +6,7 @@ from scipy.stats import binom
 from scipy.stats import truncnorm
 import math
 import random
+import seaborn as sns
 
 # Configurable assembly model for simulations
 # Author Daniel Mitropolsky, 2018
