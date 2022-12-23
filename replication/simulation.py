@@ -20,8 +20,8 @@ def associate(num_neurons=1000, beta=0.05,
     brain = Brain(num_areas=4, n=num_neurons, beta=beta,
                   p=connection_p, k=k)
     # 1. create assemblies A and B to stability
-    touched_neurons = set()
-    touched_neurons_size = []
+    # touched_neurons = set()
+    # touched_neurons_size = []
     for iiter in range(9):
         _ = brain.project(x, from_area_index=0, to_area_index=1,
                           max_iterations=1, only_once=True)
@@ -84,15 +84,17 @@ def associate(num_neurons=1000, beta=0.05,
         _ = b2.project(brain.areas[2].activations, from_area_index=2, to_area_index=3,
                        max_iterations=1, only_once=True)
         o = overlap(b1.areas[3].winners(), b2.areas[3].winners())
-        # intersect = set(b1.areas[3].winners()) & set(b2.areas[3].winners())
-        # print(len(intersect), intersect)
         result.append(round(float(o)/float(k), 4))
 
-    # return result, touched_neurons_size
     return result
 
 
 if __name__ == "__main__":
-    result = associate()
-    plt.plot([i+1 for i in range(len(result))], result)
-    plt.show()
+
+    # plot associate
+    # for i in range(10):
+    #     result = associate()
+    #     plt.figure()
+    #     plt.plot([i+1 for i in range(len(result))], result)
+    #     # plt.show()
+    #     plt.savefig('associate_figures/%i.png' % (i))
