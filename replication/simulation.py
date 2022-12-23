@@ -9,12 +9,13 @@ import copy
 import seaborn as sns
 
 
-def double_project_associate(num_neurons=1000, beta=0.05,
+def double_project_associate(x=None, num_neurons=1000, beta=0.05,
                              k=41, connection_p=0.01):
     # initialize stimulus x
-    x = np.zeros(num_neurons)
-    stim = np.random.permutation(num_neurons)[:k]
-    x[stim] = 1.0
+    if x is None:
+        x = np.zeros(num_neurons)
+        stim = np.random.permutation(num_neurons)[:k]
+        x[stim] = 1.0
 
     # initialize brain
     brain = Brain(num_areas=4, n=num_neurons, beta=beta,
@@ -89,12 +90,13 @@ def double_project_associate(num_neurons=1000, beta=0.05,
     return result
 
 
-def reciprocal_project_associate(num_neurons=1000, beta=0.05,
+def reciprocal_project_associate(x=None, num_neurons=1000, beta=0.05,
                                  k=41, connection_p=0.01):
     # initialize stimulus x
-    x = np.zeros(num_neurons)
-    stim = np.random.permutation(num_neurons)[:k]
-    x[stim] = 1.0
+    if x is None:
+        x = np.zeros(num_neurons)
+        stim = np.random.permutation(num_neurons)[:k]
+        x[stim] = 1.0
 
     # initialize brain
     brain = Brain(num_areas=4, n=num_neurons, beta=beta,
@@ -141,17 +143,49 @@ def reciprocal_project_associate(num_neurons=1000, beta=0.05,
 
 if __name__ == "__main__":
 
-    # plot associate
     for i in range(10):
-        result_proj = double_project_associate()
-        result_reci = reciprocal_project_associate()
+        print('figure %i' % (i))
+        # run experiment for 10 trials and plot avrage
+        x = np.zeros(1000)
+        stim = np.random.permutation(1000)[:41]
+        x[stim] = 1.0
+        concat_proj = np.zeros((10, 15))
+        concat_reci = np.zeros((10, 15))
+
+        for itrial in range(10):
+            result_proj = double_project_associate(x)
+            concat_proj[itrial] = result_proj
+
+            result_reci = reciprocal_project_associate(x)
+            concat_reci[itrial] = result_reci
+
+        proj_mean = np.mean(concat_proj, axis=0)
+        reci_mean = np.mean(concat_reci, axis=0)
         plt.figure()
-        plt.plot([i+1 for i in range(len(result_proj))],
-                 result_proj, label="project")
-        plt.plot([i+1 for i in range(len(result_reci))],
-                 result_reci, label="reci-project")
+        plt.plot([i+1 for i in range(len(proj_mean))],
+                 proj_mean, label="project")
+        plt.plot([i+1 for i in range(len(reci_mean))],
+                 reci_mean, label="reci-project")
         plt.legend()
         plt.xlabel('time (step)')
         plt.ylabel('overlap (%)')
         # plt.show()
-        plt.savefig('reciprocal_associate_figures/%i.png' % (i))
+        plt.savefig('ten_trials_average/%i.png' % (i))
+
+    # plot associate
+    # for i in range(10):
+    #     x = np.zeros(1000)
+    #     stim = np.random.permutation(1000)[:41]
+    #     x[stim] = 1.0
+    #     result_proj = double_project_associate(x)
+    #     result_reci = reciprocal_project_associate(x)
+    #     plt.figure()
+    #     plt.plot([i+1 for i in range(len(result_proj))],
+    #              result_proj, label="project")
+    #     plt.plot([i+1 for i in range(len(result_reci))],
+    #              result_reci, label="reci-project")
+    #     plt.legend()
+    #     plt.xlabel('time (step)')
+    #     plt.ylabel('overlap (%)')
+    #     # plt.show()
+    #     plt.savefig('reciprocal_associate_figures/%i.png' % (i))
