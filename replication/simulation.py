@@ -9,8 +9,8 @@ import copy
 import seaborn as sns
 
 
-def associate(num_neurons=1000, beta=0.05,
-              k=41, connection_p=0.01):
+def double_project_associate(num_neurons=1000, beta=0.05,
+                             k=41, connection_p=0.01):
     # initialize stimulus x
     x = np.zeros(num_neurons)
     stim = np.random.permutation(num_neurons)[:k]
@@ -89,12 +89,69 @@ def associate(num_neurons=1000, beta=0.05,
     return result
 
 
+def reciprocal_project_associate(num_neurons=1000, beta=0.05,
+                                 k=41, connection_p=0.01):
+    # initialize stimulus x
+    x = np.zeros(num_neurons)
+    stim = np.random.permutation(num_neurons)[:k]
+    x[stim] = 1.0
+
+    # initialize brain
+    brain = Brain(num_areas=4, n=num_neurons, beta=beta,
+                  p=connection_p, k=k)
+    # 1. reciprocal project
+    for iiter in range(9):
+        _ = brain.reciprocal_project(x, area1_index=0, area2_index=1, area3_index=2,
+                                     max_iterations=1, only_once=True)
+
+    # 2. Project A->C
+    for iiter in range(9):
+        _ = brain.project(brain.areas[1].activations, from_area_index=1, to_area_index=3,
+                          max_iterations=1, only_once=True)
+    # Project B->C
+    for iiter in range(9):
+        _ = brain.project(brain.areas[2].activations, from_area_index=2, to_area_index=3,
+                          max_iterations=1, only_once=True)
+
+    # 4. make a copy of brain
+    # b1, b2, then project A -> C in b1, project B -> C in b2
+    # compute the overlap winners of C in b1 and C in b2
+    result = []
+    for iiter in range(15):
+        _ = brain.project(brain.areas[1].activations, from_area_index=1, to_area_index=3,
+                          max_iterations=1, only_once=True)
+
+        _ = brain.project(brain.areas[2].activations, from_area_index=2, to_area_index=3,
+                          max_iterations=1, only_once=True)
+
+        b1 = copy.deepcopy(brain)
+        b2 = copy.deepcopy(brain)
+        # in copy 1, project just A
+        _ = b1.project(brain.areas[1].activations, from_area_index=1, to_area_index=3,
+                       max_iterations=1, only_once=True)
+
+        # in copy 2, project just B
+        _ = b2.project(brain.areas[2].activations, from_area_index=2, to_area_index=3,
+                       max_iterations=1, only_once=True)
+        o = overlap(b1.areas[3].winners(), b2.areas[3].winners())
+        result.append(round(float(o)/float(k), 4))
+
+    return result
+
+
 if __name__ == "__main__":
 
     # plot associate
-    # for i in range(10):
-    #     result = associate()
-    #     plt.figure()
-    #     plt.plot([i+1 for i in range(len(result))], result)
-    #     # plt.show()
-    #     plt.savefig('associate_figures/%i.png' % (i))
+    for i in range(10):
+        result_proj = double_project_associate()
+        result_reci = reciprocal_project_associate()
+        plt.figure()
+        plt.plot([i+1 for i in range(len(result_proj))],
+                 result_proj, label="project")
+        plt.plot([i+1 for i in range(len(result_reci))],
+                 result_reci, label="reci-project")
+        plt.legend()
+        plt.xlabel('time (step)')
+        plt.ylabel('overlap (%)')
+        # plt.show()
+        plt.savefig('reciprocal_associate_figures/%i.png' % (i))
